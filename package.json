@@ -1,0 +1,27 @@
+{
+  "name": "discord-test-reporter",
+  "version": "1.0.0",
+  "description": "Standalone Discord Test Reporter for Cypress Tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "cypress run --reporter json --reporter-options output=test-results.json",
+    "format-results": "node cypress-json-reporter.js",
+    "generate-summary": "node scripts/parse-test-summary.js",
+    "send-report": "node scripts/send-discord-report.js",
+    "report": "npm run generate-summary && npm run send-report",
+    "test:report": "npm test && npm run format-results && npm run report"
+  },
+  "keywords": [
+    "testing",
+    "discord",
+    "reporting",
+    "cypress",
+    "test-automation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "cypress": "^13.6.0"
+  },
+  "dependencies": {}
+}

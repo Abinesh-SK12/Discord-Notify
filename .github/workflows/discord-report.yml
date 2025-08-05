@@ -1,0 +1,41 @@
+name: Send Test Summary to Discord
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 9 * * *'   # Daily at 9:00 AM UTC
+    - cron: '0 16 * * *'  # Daily at 4:00 PM UTC
+  workflow_dispatch:       # Allow manual trigger
+
+jobs:
+  test-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Cypress Tests
+        run: |
+          npm test || true
+          node cypress-json-reporter.js || true
+        continue-on-error: true
+
+      - name: Generate Test Summary
+        run: node scripts/parse-test-summary.js
+
+      - name: Send Report to Discord
+        run: node scripts/send-discord-report.js
+        env:
+          DISCORD_WEBHOOK_URL: https://discord.com/api/webhooks/1401862123520397445/jvU92hE5VNYI84DW1mtnRvC6pF-r_bji7KeBVA4lD1Z_9JDKGrxEpdlSO18rXyDLjg3O

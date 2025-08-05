@@ -1,0 +1,7 @@
+node_modules/
+cypress/screenshots/
+cypress/videos/
+test-results.json
+test-summary.json
+.DS_Store
+*.log
