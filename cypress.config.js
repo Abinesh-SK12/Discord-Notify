@@ -2,7 +2,7 @@ const { defineConfig } = require('cypress')
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: 'https://example.com',
+    baseUrl: 'https://www.youtube.com',
     supportFile: 'cypress/support/e2e.js',
     specPattern: 'cypress/e2e/**/*.{js,jsx,ts,tsx}',
     screenshotsFolder: 'cypress/screenshots',

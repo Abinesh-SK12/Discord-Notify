@@ -4,7 +4,7 @@
   "description": "Standalone Discord Test Reporter for Cypress Tests",
   "main": "index.js",
   "scripts": {
-    "test": "cypress run --reporter json --reporter-options output=test-results.json",
+    "test": "cypress run --reporter json > test-results.json 2>&1 || true",
     "format-results": "node cypress-json-reporter.js",
     "generate-summary": "node scripts/parse-test-summary.js",
     "send-report": "node scripts/send-discord-report.js",
