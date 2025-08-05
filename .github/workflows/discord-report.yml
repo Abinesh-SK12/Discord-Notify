@@ -28,19 +28,57 @@ jobs:
 
       - name: Run Cypress Tests
         run: |
-          npm test || true
-          # Check if test-results.json exists and is valid JSON
-          if [ -f test-results.json ]; then
-            # Try to parse the JSON, if it fails, create a default one
-            node -e "try { JSON.parse(require('fs').readFileSync('test-results.json', 'utf8')) } catch(e) { console.log('Invalid JSON, creating default'); require('fs').writeFileSync('test-results.json', JSON.stringify({stats:{tests:0,passes:0,failures:0,pending:0,duration:0},tests:[],failures:[]})) }"
+          # Run Cypress and capture JSON output
+          npx cypress run --reporter json --reporter-options output=cypress-output.json || true
+          
+          # Check if cypress-output.json was created
+          if [ -f cypress-output.json ]; then
+            echo "Cypress output found, copying to test-results.json"
+            cp cypress-output.json test-results.json
           else
-            # Create default test results if file doesn't exist
+            echo "No cypress-output.json found, trying alternative method"
+            # Try running with direct output
+            npx cypress run --reporter json > test-results.json 2>&1 || true
+          fi
+          
+          # Clean up the JSON output (remove non-JSON content)
+          if [ -f test-results.json ]; then
+            # Extract only the JSON part from the output
+            node -e "
+              const fs = require('fs');
+              const content = fs.readFileSync('test-results.json', 'utf8');
+              const jsonMatch = content.match(/\{[\s\S]*\"stats\"[\s\S]*\}/);
+              if (jsonMatch) {
+                try {
+                  const json = JSON.parse(jsonMatch[0]);
+                  fs.writeFileSync('test-results.json', JSON.stringify(json, null, 2));
+                  console.log('Extracted valid JSON from output');
+                } catch (e) {
+                  console.log('Failed to parse extracted JSON');
+                  fs.writeFileSync('test-results.json', JSON.stringify({stats:{tests:0,passes:0,failures:0,pending:0,duration:0},tests:[],failures:[]}));
+                }
+              } else {
+                console.log('No JSON found in output');
+                fs.writeFileSync('test-results.json', JSON.stringify({stats:{tests:0,passes:0,failures:0,pending:0,duration:0},tests:[],failures:[]}));
+              }
+            "
+          else
             echo '{"stats":{"tests":0,"passes":0,"failures":0,"pending":0,"duration":0},"tests":[],"failures":[]}' > test-results.json
           fi
+          
+          # Display the test results for debugging
+          echo "Test results content:"
+          cat test-results.json
         continue-on-error: true
 
-      - name: Generate Test Summary
-        run: node scripts/parse-test-summary.js
+      - name: Format and Generate Test Summary
+        run: |
+          # Show test-results.json content for debugging
+          echo "Raw test results:"
+          cat test-results.json
+          
+          # Generate summary
+          node scripts/parse-test-summary.js
 
       - name: Send Report to Discord
         run: node scripts/send-discord-report.js
