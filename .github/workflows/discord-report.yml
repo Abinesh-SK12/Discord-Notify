@@ -28,7 +28,15 @@ jobs:
 
       - name: Run Cypress Tests
         run: |
-          npm test || echo '{"stats":{"tests":0,"passes":0,"failures":0,"pending":0,"duration":0},"tests":[],"failures":[]}' > test-results.json
+          npm test || true
+          # Check if test-results.json exists and is valid JSON
+          if [ -f test-results.json ]; then
+            # Try to parse the JSON, if it fails, create a default one
+            node -e "try { JSON.parse(require('fs').readFileSync('test-results.json', 'utf8')) } catch(e) { console.log('Invalid JSON, creating default'); require('fs').writeFileSync('test-results.json', JSON.stringify({stats:{tests:0,passes:0,failures:0,pending:0,duration:0},tests:[],failures:[]})) }"
+          else
+            # Create default test results if file doesn't exist
+            echo '{"stats":{"tests":0,"passes":0,"failures":0,"pending":0,"duration":0},"tests":[],"failures":[]}' > test-results.json
+          fi
         continue-on-error: true
 
       - name: Generate Test Summary
